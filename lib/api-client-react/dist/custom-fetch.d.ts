@@ -136,7 +136,7 @@ export async function customFetch<T = unknown>(
       method: "POST",
       body: JSON.stringify(newUser),
     });
-    const formatted = formatUser(created[0]);
+    const formatted = formatUser(Array.isArray(created) ? created : created);
     localStorage.setItem("agenda_6c_user", JSON.stringify(formatted));
     return formatted as T;
   }
@@ -145,10 +145,10 @@ export async function customFetch<T = unknown>(
     const users = await sbRequest(
       `school_users?username=eq.${encodeURIComponent(body.username.trim())}`
     );
-    if (!users || users.length === 0 || users[0].password_hash !== body.password) {
+    if (!users || users.length === 0 || users.password_hash !== body.password) {
       throw new ApiError(401, "Usuário ou senha incorretos.");
     }
-    const formatted = formatUser(users[0]);
+    const formatted = formatUser(users);
     localStorage.setItem("agenda_6c_user", JSON.stringify(formatted));
     return formatted as T;
   }
@@ -165,7 +165,7 @@ export async function customFetch<T = unknown>(
   }
 
   if (path === "/dashboard-summary" && method === "GET") {
-    const today = new Date().toISOString().split("T")[0];
+    const today = new Date().toISOString().split("T");
     const [activitiesRaw, announcementsRaw] = await Promise.all([
       sbRequest("school_activities?order=due_date.asc"),
       sbRequest("school_announcements?order=created_at.desc&limit=1"),
@@ -176,8 +176,8 @@ export async function customFetch<T = unknown>(
     return {
       upcomingCount: upcoming.length,
       pastCount: past.length,
-      nextActivity: upcoming[0] || null,
-      latestAnnouncement: announcementsRaw?.[0] ? formatAnnouncement(announcementsRaw[0]) : null,
+      nextActivity: upcoming || null,
+      latestAnnouncement: announcementsRaw?. ? formatAnnouncement(announcementsRaw) : null,
     } as T;
   }
 
@@ -199,11 +199,11 @@ export async function customFetch<T = unknown>(
         created_by: user.id,
       }),
     });
-    return formatActivity(created[0]) as T;
+    return formatActivity(Array.isArray(created) ? created : created) as T;
   }
 
   if (path.startsWith("/activities/")) {
-    const id = path.split("/")[2];
+    const id = path.split("/");
     if (method === "PATCH") {
       const patchData: any = {};
       if (body.title !== undefined) patchData.title = body.title;
@@ -214,7 +214,7 @@ export async function customFetch<T = unknown>(
         method: "PATCH",
         body: JSON.stringify(patchData),
       });
-      return formatActivity(updated[0]) as T;
+      return formatActivity(Array.isArray(updated) ? updated : updated) as T;
     }
     if (method === "DELETE") {
       await sbRequest(`school_activities?id=eq.${id}`, { method: "DELETE" });
@@ -239,11 +239,11 @@ export async function customFetch<T = unknown>(
         created_by: user.id,
       }),
     });
-    return formatAnnouncement(created[0]) as T;
+    return formatAnnouncement(Array.isArray(created) ? created : created) as T;
   }
 
   if (path.startsWith("/announcements/")) {
-    const id = path.split("/")[2];
+    const id = path.split("/");
     if (method === "PATCH") {
       const patchData: any = {};
       if (body.title !== undefined) patchData.title = body.title;
@@ -253,7 +253,7 @@ export async function customFetch<T = unknown>(
         method: "PATCH",
         body: JSON.stringify(patchData),
       });
-      return formatAnnouncement(updated[0]) as T;
+      return formatAnnouncement(Array.isArray(updated) ? updated : updated) as T;
     }
     if (method === "DELETE") {
       await sbRequest(`school_announcements?id=eq.${id}`, { method: "DELETE" });
