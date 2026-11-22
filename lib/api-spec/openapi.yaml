@@ -1,0 +1,477 @@
+openapi: 3.1.0
+info:
+  # Do not change the title, if the title changes, the import paths will be broken
+  title: Api
+  version: 0.1.0
+  description: API specification
+servers:
+  - url: /api
+    description: Base API path
+tags:
+  - name: health
+    description: Health operations
+  - name: school
+    description: Agenda Escolar 6º C
+  - name: auth
+    description: Cadastro e autenticação da agenda
+paths:
+  /healthz:
+    get:
+      operationId: healthCheck
+      tags: [health]
+      summary: Health check
+      description: Returns server health status
+      responses:
+        "200":
+          description: Healthy
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/HealthStatus"
+  /auth/register:
+    post:
+      operationId: registerAccount
+      tags: [auth]
+      summary: Register an account with an optional administrator code
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/RegisterAccountInput"
+      responses:
+        "201":
+          description: Account created and signed in
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SchoolUser"
+        "400":
+          description: Invalid registration data or administrator code
+        "409":
+          description: Username or email already exists
+        "429":
+          description: Too many registration attempts
+        "503":
+          description: Administrator code is not configured
+  /auth/login:
+    post:
+      operationId: loginAccount
+      tags: [auth]
+      summary: Sign in with a username and password
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/LoginAccountInput"
+      responses:
+        "200":
+          description: Signed-in account
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SchoolUser"
+        "401":
+          description: Invalid username or password
+        "429":
+          description: Too many sign-in attempts
+  /auth/logout:
+    post:
+      operationId: logoutAccount
+      tags: [auth]
+      summary: Sign out the current account
+      responses:
+        "204":
+          description: Signed out
+  /me:
+    get:
+      operationId: getCurrentUser
+      tags: [school]
+      summary: Get the signed-in student or administrator
+      responses:
+        "200":
+          description: Current account
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SchoolUser"
+        "401":
+          description: Authentication required
+  /dashboard-summary:
+    get:
+      operationId: getDashboardSummary
+      tags: [school]
+      summary: Get the agenda overview
+      responses:
+        "200":
+          description: Upcoming work and recent notices
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DashboardSummary"
+        "401":
+          description: Authentication required
+  /activities:
+    get:
+      operationId: listActivities
+      tags: [school]
+      summary: List all class activities
+      responses:
+        "200":
+          description: Class activities
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Activity"
+        "401":
+          description: Authentication required
+    post:
+      operationId: createActivity
+      tags: [school]
+      summary: Publish an activity
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ActivityInput"
+      responses:
+        "201":
+          description: Activity published
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Activity"
+        "400":
+          description: Invalid activity
+        "401":
+          description: Authentication required
+        "403":
+          description: Administrator access required
+  /activities/{id}:
+    patch:
+      operationId: updateActivity
+      tags: [school]
+      summary: Edit an activity
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ActivityUpdate"
+      responses:
+        "200":
+          description: Updated activity
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Activity"
+        "400":
+          description: Invalid activity
+        "401":
+          description: Authentication required
+        "403":
+          description: Administrator access required
+        "404":
+          description: Activity not found
+    delete:
+      operationId: deleteActivity
+      tags: [school]
+      summary: Delete an activity
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "204":
+          description: Activity deleted
+        "401":
+          description: Authentication required
+        "403":
+          description: Administrator access required
+        "404":
+          description: Activity not found
+  /announcements:
+    get:
+      operationId: listAnnouncements
+      tags: [school]
+      summary: List class announcements
+      responses:
+        "200":
+          description: Class announcements
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Announcement"
+        "401":
+          description: Authentication required
+    post:
+      operationId: createAnnouncement
+      tags: [school]
+      summary: Publish an announcement
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/AnnouncementInput"
+      responses:
+        "201":
+          description: Announcement published
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Announcement"
+        "400":
+          description: Invalid announcement
+        "401":
+          description: Authentication required
+        "403":
+          description: Administrator access required
+  /announcements/{id}:
+    patch:
+      operationId: updateAnnouncement
+      tags: [school]
+      summary: Edit an announcement
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/AnnouncementUpdate"
+      responses:
+        "200":
+          description: Updated announcement
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Announcement"
+        "400":
+          description: Invalid announcement
+        "401":
+          description: Authentication required
+        "403":
+          description: Administrator access required
+        "404":
+          description: Announcement not found
+    delete:
+      operationId: deleteAnnouncement
+      tags: [school]
+      summary: Delete an announcement
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "204":
+          description: Announcement deleted
+        "401":
+          description: Authentication required
+        "403":
+          description: Administrator access required
+        "404":
+          description: Announcement not found
+components:
+  schemas:
+    HealthStatus:
+      type: object
+      properties:
+        status:
+          type: string
+      required:
+        - status
+    SchoolUser:
+      type: object
+      properties:
+        id:
+          type: string
+        username:
+          type: string
+        email:
+          type: string
+        name:
+          type: string
+        role:
+          type: string
+          enum: [student, admin]
+      required: [id, username, email, name, role]
+    RegisterAccountInput:
+      type: object
+      properties:
+        username:
+          type: string
+          minLength: 3
+          maxLength: 32
+          pattern: "^[A-Za-z0-9._-]+$"
+        name:
+          type: string
+          minLength: 2
+          maxLength: 80
+        email:
+          type: string
+          format: email
+          maxLength: 320
+        password:
+          type: string
+          minLength: 8
+          maxLength: 128
+        adminSignupCode:
+          type: string
+          maxLength: 256
+      required: [username, name, email, password]
+    LoginAccountInput:
+      type: object
+      properties:
+        username:
+          type: string
+          minLength: 3
+          maxLength: 32
+        password:
+          type: string
+          minLength: 1
+          maxLength: 128
+      required: [username, password]
+    Activity:
+      type: object
+      properties:
+        id:
+          type: integer
+        title:
+          type: string
+        description:
+          type: string
+        subject:
+          type: string
+        dueDate:
+          type: string
+          format: date
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+      required: [id, title, description, subject, dueDate, createdAt, updatedAt]
+    ActivityInput:
+      type: object
+      properties:
+        title:
+          type: string
+          minLength: 1
+          maxLength: 160
+        description:
+          type: string
+          maxLength: 5000
+        subject:
+          type: string
+          minLength: 1
+          maxLength: 80
+        dueDate:
+          type: string
+          format: date
+      required: [title, description, subject, dueDate]
+    ActivityUpdate:
+      type: object
+      properties:
+        title:
+          type: string
+          minLength: 1
+          maxLength: 160
+        description:
+          type: string
+          maxLength: 5000
+        subject:
+          type: string
+          minLength: 1
+          maxLength: 80
+        dueDate:
+          type: string
+          format: date
+      minProperties: 1
+    Announcement:
+      type: object
+      properties:
+        id:
+          type: integer
+        title:
+          type: string
+        content:
+          type: string
+        priority:
+          type: string
+          enum: [normal, important]
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+      required: [id, title, content, priority, createdAt, updatedAt]
+    AnnouncementInput:
+      type: object
+      properties:
+        title:
+          type: string
+          minLength: 1
+          maxLength: 160
+        content:
+          type: string
+          minLength: 1
+          maxLength: 5000
+        priority:
+          type: string
+          enum: [normal, important]
+      required: [title, content, priority]
+    AnnouncementUpdate:
+      type: object
+      properties:
+        title:
+          type: string
+          minLength: 1
+          maxLength: 160
+        content:
+          type: string
+          minLength: 1
+          maxLength: 5000
+        priority:
+          type: string
+          enum: [normal, important]
+      minProperties: 1
+    DashboardSummary:
+      type: object
+      properties:
+        upcomingCount:
+          type: integer
+        pastCount:
+          type: integer
+        nextActivity:
+          anyOf:
+            - $ref: "#/components/schemas/Activity"
+            - type: "null"
+        latestAnnouncement:
+          anyOf:
+            - $ref: "#/components/schemas/Announcement"
+            - type: "null"
+      required: [upcomingCount, pastCount, nextActivity, latestAnnouncement]
+
